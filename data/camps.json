@@ -1,0 +1,5 @@
+[
+  { "id": "camp-t1", "name": "Camp (Tier 1)", "tier": 1, "fromRound": 1, "cost": 1, "damage": 3, "reward": 3 },
+  { "id": "camp-t2", "name": "Camp (Tier 2)", "tier": 2, "fromRound": 2, "cost": 2, "damage": 6, "reward": 6 },
+  { "id": "camp-t3", "name": "Camp (Tier 3)", "tier": 3, "fromRound": 3, "cost": 3, "damage": 10, "reward": 10 }
+]

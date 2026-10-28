@@ -1,0 +1,5 @@
+[
+  { "id": "buff-gun", "name": "Buff: +1 Gun", "cost": 1, "stats": { "gun": 1 }, "text": "One hero gets +1 Gun for the rest of the game." },
+  { "id": "buff-health", "name": "Buff: +4 Health", "cost": 1, "stats": { "health": 4 }, "text": "One hero gets +4 Health for the rest of the game." },
+  { "id": "buff-spirit", "name": "Buff: +1 Spirit", "cost": 1, "stats": { "spirit": 1 }, "text": "One hero gets +1 Spirit for the rest of the game." }
+]

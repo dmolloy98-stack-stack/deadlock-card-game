@@ -1,0 +1,18 @@
+{
+  "patronHealth": 100,
+  "deck": { "size": 20, "maxCopies": 2 },
+  "openingHand": 5,
+  "drawPerTurn": 1,
+  "souls": { "base": 2, "perTurn": 1, "cap": 8, "secondPlayerBonus": 2 },
+  "heroItemSlots": 3,
+  "itemTierCosts": [1, 2, 4, 8],
+  "moveItemCostFraction": 0.5,
+  "colorBonuses": [
+    { "invested": 4, "bonus": 2 },
+    { "invested": 10, "bonus": 5 },
+    { "invested": 20, "bonus": 12 }
+  ],
+  "firstDeployFree": true,
+  "hitBackFraction": 0.5,
+  "deathTimer": { "base": 2, "perPreviousDeath": 1, "cap": 6 }
+}

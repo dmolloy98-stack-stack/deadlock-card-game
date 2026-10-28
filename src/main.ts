@@ -1,8 +1,4 @@
 import "./style.css";
+import { startApp } from "./ui/app";
 
-const app = document.querySelector<HTMLDivElement>("#app")!;
-
-app.innerHTML = `
-  <h1>Deadlock Card Game</h1>
-  <p>Setup works. The game itself arrives in step 1.</p>
-`;
+startApp(document.querySelector<HTMLDivElement>("#app")!);

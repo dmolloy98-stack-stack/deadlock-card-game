@@ -1,0 +1,8 @@
+[
+  { "id": "wraith", "name": "Wraith", "mainPath": "gun", "passive": false, "cost": 4, "stats": { "health": 18, "gun": 4, "spirit": 1 } },
+  { "id": "haze", "name": "Haze", "mainPath": "gun", "passive": true, "cost": 5, "stats": { "health": 16, "gun": 5, "spirit": 1 } },
+  { "id": "mina", "name": "Mina", "mainPath": "spirit", "passive": true, "cost": 5, "stats": { "health": 16, "gun": 2, "spirit": 4 } },
+  { "id": "grey-talon", "name": "Grey Talon", "mainPath": "spirit", "passive": false, "cost": 5, "stats": { "health": 16, "gun": 3, "spirit": 4 } },
+  { "id": "victor", "name": "Victor", "mainPath": "health", "passive": false, "cost": 5, "stats": { "health": 24, "gun": 2, "spirit": 3 } },
+  { "id": "abrams", "name": "Abrams", "mainPath": "health", "passive": true, "cost": 6, "stats": { "health": 30, "gun": 3, "spirit": 1 } }
+]
