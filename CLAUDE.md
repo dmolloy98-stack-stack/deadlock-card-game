@@ -36,7 +36,7 @@ Each step needs the owner's sign-off before the next one starts.
 
 0. Setup: tooling, blank page, Pages deploy. (done)
 1. Core rules: setup, souls, deploying, items and upgrades, moving items, color bonuses, camps, combat, Down timers, winning. Plain hot-seat screen. (built, waiting for sign-off)
-2. Real board: desktop layout, card visuals, clicks, simple animations.
+2. Real board: desktop layout, card visuals, clicks, simple animations. (first version built, waiting for feedback)
 3. Basic AI. This is the first playable version.
 4. Midboss and Sinner's Sacrifice altars.
 5. Abilities: unlocks, cooldowns, status effects, skillshots, then the six hero kits.

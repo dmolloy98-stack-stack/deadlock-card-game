@@ -62,8 +62,11 @@ export function helpHtml(): string {
         <li><b>Send a hero to a camp</b> to earn souls.</li>
         <li><b>Move an item</b> from one of your heroes to another.</li>
       </ul>
-      The move buttons on the right only ever show what you're allowed to do right now, and the cards you can play are marked in your hand.</li>
-    <li><b>Combat</b>: press <i>Go to combat</i>. Each Ready hero may attack once. You can't go back to the main phase after this.</li>
+      <b>How to click it:</b> anything you can use right now glows gold. Click a glowing card in your hand, then click the hero
+      it should go on (the heroes you can pick pulse white). Deploy a hero with the <i>Deploy</i> button on its card. To move an item,
+      click it on its hero, then click the hero it should go to. Every move is also listed under <i>All moves as a list</i> on the right.</li>
+    <li><b>Combat</b>: press <i>Go to combat</i>. Click one of your Ready heroes, then click the enemy hero or the enemy Patron it should
+      attack. Each Ready hero may attack once. You can't go back to the main phase after this.</li>
     <li><b>End turn</b>: all damage on heroes heals, and it's the other player's turn. You can end your turn without fighting.</li>
   </ol>
 
@@ -84,7 +87,8 @@ export function helpHtml(): string {
       rounded up, even if it's exhausted. Only gun attacks cause a hit back.</li>
     <li><b>Attack the enemy Patron</b>: the other player may <b>block</b> with one of their Ready heroes. The blocker and your hero
       deal their full Gun damage to each other, and the Patron takes nothing. Each hero can block once per turn.
-      If they don't block, or have no Ready hero, the Patron takes your hero's Gun damage.</li>
+      If they don't block, or have no Ready hero, the Patron takes your hero's Gun damage. When you're the one being attacked,
+      the game asks you: click one of your glowing heroes to block, or press the button to take the hit.</li>
   </ul>
   <p>Damage on heroes heals at the end of every turn, so a hero only goes Down if it takes its full Health in one turn.</p>
 
