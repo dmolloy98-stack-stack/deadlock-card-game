@@ -14,6 +14,7 @@
 - When a rule is decided, update the Google Doc: bump the version number in its title heading, and move the item out of "Still open".
 - Numbers marked "(placeholder)" in the doc are guesses to tune in playtests, not decisions.
 - The owner is a designer, not a programmer. Explain technical steps in plain words, and say what they need to do themselves.
+- When work is ready, open the pull request into `main` yourself and give the owner the link. The owner only clicks Merge.
 
 ## Design rules
 
