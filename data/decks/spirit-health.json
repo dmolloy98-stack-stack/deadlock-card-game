@@ -1,0 +1,21 @@
+{
+  "id": "spirit-health",
+  "name": "Spirit / Health test deck",
+  "cards": {
+    "extra-spirit": 2,
+    "spirit-strike": 1,
+    "improved-spirit": 1,
+    "mystic-vulnerability": 1,
+    "suppressor": 1,
+    "torment-pulse": 1,
+    "extra-health": 1,
+    "extra-regen": 1,
+    "metal-skin": 1,
+    "colossus": 1,
+    "buff-spirit": 2,
+    "buff-health": 1,
+    "camp-t1": 2,
+    "camp-t2": 2,
+    "camp-t3": 2
+  }
+}

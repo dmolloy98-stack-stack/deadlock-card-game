@@ -1,25 +1,96 @@
 :root {
   color-scheme: dark;
   --bg: #15171c;
+  --panel: #1e2128;
+  --line: #333844;
   --text: #e8e4d8;
   --muted: #9a968c;
+  --gun: #e8923a;
+  --health: #6cbf5a;
+  --spirit: #b07ce8;
+  --accent: #d9b55a;
 }
 
 body {
   margin: 0;
-  min-height: 100vh;
-  display: grid;
-  place-items: center;
   background: var(--bg);
   color: var(--text);
   font-family: system-ui, sans-serif;
+  font-size: 14px;
 }
 
-h1 {
-  margin: 0 0 0.5rem;
-}
+h1, h2, h3 { margin: 0 0 0.4rem; }
+h2 { font-size: 1.05rem; }
+h3 { font-size: 0.95rem; margin-top: 0.8rem; }
+.muted { color: var(--muted); }
+.small { font-size: 0.8rem; color: var(--muted); }
+.gun { color: var(--gun); }
+.health { color: var(--health); }
+.spirit { color: var(--spirit); }
 
-p {
-  margin: 0;
-  color: var(--muted);
+button {
+  font: inherit;
+  color: var(--text);
+  background: #2a2f3a;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 0.3rem 0.6rem;
+  cursor: pointer;
+  text-align: left;
 }
+button:hover { border-color: var(--accent); }
+
+.setup {
+  max-width: 420px;
+  margin: 3rem auto;
+  display: grid;
+  gap: 0.8rem;
+}
+.setup fieldset { border: 1px solid var(--line); display: flex; gap: 0.4rem; }
+.setup select, .setup input { font: inherit; }
+
+header {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid var(--line);
+}
+header .prompt { color: var(--accent); flex: 1; }
+
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 1rem;
+  padding: 1rem;
+}
+.board { display: grid; gap: 1rem; }
+
+.player {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0.8rem;
+}
+.player.active { border-color: var(--accent); }
+
+.heroes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem; margin: 0.6rem 0; }
+.hero { border: 1px solid var(--line); border-radius: 4px; padding: 0.5rem; }
+.hero.line { opacity: 0.55; }
+.hero.down { opacity: 0.45; border-style: dashed; }
+.hero.exhausted { background: #191b20; }
+.items { margin: 0.3rem 0 0; padding-left: 1.1rem; }
+
+.hand { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.4rem; margin-top: 0.4rem; }
+.card { border: 1px solid var(--line); border-left-width: 4px; border-radius: 4px; padding: 0.4rem; }
+.card.gun { border-left-color: var(--gun); }
+.card.health { border-left-color: var(--health); }
+.card.spirit { border-left-color: var(--spirit); }
+.card.camp { border-left-color: #6a8fb5; }
+.card.buff { border-left-color: var(--accent); }
+.card .cost { float: right; color: var(--accent); }
+
+.actions { display: grid; gap: 0.3rem; }
+.actions .startCombat, .actions .endTurn { border-color: var(--accent); }
+.log { max-height: 50vh; overflow-y: auto; padding-left: 0; margin: 0; list-style: none; }
+.log li { margin-bottom: 0.15rem; }

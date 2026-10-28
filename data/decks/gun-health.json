@@ -1,0 +1,20 @@
+{
+  "id": "gun-health",
+  "name": "Gun / Health test deck",
+  "cards": {
+    "extended-magazine": 2,
+    "headshot-booster": 1,
+    "rapid-rounds": 1,
+    "titanic-magazine": 1,
+    "swift-striker": 1,
+    "headhunter": 1,
+    "extra-health": 2,
+    "bullet-armor": 1,
+    "fortitude": 1,
+    "buff-gun": 2,
+    "buff-health": 1,
+    "camp-t1": 2,
+    "camp-t2": 2,
+    "camp-t3": 2
+  }
+}
