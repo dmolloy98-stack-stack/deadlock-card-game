@@ -9,6 +9,17 @@ The rules live in a Google Doc, not in this repository:
 
 That doc is the master copy. When the rules and the code disagree, the doc wins.
 
+## Play
+
+Once GitHub Pages is switched on, the game is at https://dmolloy98-stack-stack.github.io/deadlock-card-game/ and updates every time `main` changes.
+
 ## Code
 
-Nothing is built yet. The plan is a browser game written in HTML, CSS and TypeScript, with card data in JSON files. See `CLAUDE.md` for how the work is organized.
+A browser game in HTML, CSS and TypeScript, built with Vite and tested with Vitest. Card data lives in JSON files. See `CLAUDE.md` for the build steps and how the work is organized.
+
+To run it on your own computer (needs Node.js):
+
+```bash
+npm install
+npm run dev
+```
