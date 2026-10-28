@@ -3,13 +3,20 @@ import { legalActions, newGame } from "../src/rules";
 import { P1_HEROES, P2_HEROES, play, startGame } from "./helpers";
 
 describe("setup and turns", () => {
-  it("deals 5 cards, then the first player draws 1 and gains 3 souls", () => {
+  it("deals 3 cards, and the first player doesn't draw on their first turn", () => {
     const state = startGame();
     expect(state.active).toBe(0);
-    expect(state.players[0].hand).toHaveLength(6);
-    expect(state.players[1].hand).toHaveLength(5);
+    expect(state.players[0].hand).toHaveLength(3);
+    expect(state.players[1].hand).toHaveLength(3);
     expect(state.players[0].souls).toBe(3);
-    expect(state.players[0].deck).toHaveLength(14);
+    expect(state.players[0].deck).toHaveLength(17);
+  });
+
+  it("lets the second player draw on their first turn, and everyone draws 1 a turn after that", () => {
+    let state = play(startGame(), { type: "endTurn" });
+    expect(state.players[1].hand).toHaveLength(4);
+    state = play(state, { type: "endTurn" });
+    expect(state.players[0].hand).toHaveLength(4);
   });
 
   it("gives souls of 2 + turn number, capped at 8, and carries unspent souls over", () => {

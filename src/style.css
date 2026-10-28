@@ -94,3 +94,35 @@ header .prompt { color: var(--accent); flex: 1; }
 .actions .startCombat, .actions .endTurn { border-color: var(--accent); }
 .log { max-height: 50vh; overflow-y: auto; padding-left: 0; margin: 0; list-style: none; }
 .log li { margin-bottom: 0.15rem; }
+
+.hint {
+  padding: 0.5rem 1rem;
+  background: #232017;
+  border-bottom: 1px solid var(--line);
+  color: var(--accent);
+}
+
+.card .kind { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+.card.playable { box-shadow: 0 0 0 1px var(--accent); }
+.card .tag { margin-top: 0.3rem; font-size: 0.75rem; color: var(--accent); }
+
+.group { margin-bottom: 0.6rem; }
+.group summary { cursor: pointer; font-weight: 600; margin-bottom: 0.2rem; }
+.group .small { margin-bottom: 0.3rem; }
+
+dialog#help {
+  max-width: 820px;
+  max-height: 85vh;
+  overflow-y: auto;
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 1rem 1.5rem;
+  line-height: 1.45;
+}
+dialog#help::backdrop { background: rgba(0, 0, 0, 0.6); }
+dialog#help .close { float: right; }
+dialog#help h3 { margin-top: 1.2rem; color: var(--accent); }
+dialog#help table { border-collapse: collapse; margin: 0.4rem 0; width: 100%; }
+dialog#help th, dialog#help td { border: 1px solid var(--line); padding: 0.25rem 0.4rem; text-align: left; vertical-align: top; }
