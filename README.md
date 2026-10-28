@@ -2,7 +2,7 @@
 
 A one-on-one card game based on Deadlock. Each player is a Patron with three heroes, and builds them with items, buffs and camp cards from a mixed deck.
 
-This is a complete fan base made game with no affiliation with the actual Deadlock team. This is a passion project for creative fun
+This is a fan made game with no affiliation with the actual Deadlock team. This is a passion project for creative fun
 
 ## Rules
 
