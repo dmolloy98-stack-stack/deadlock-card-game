@@ -1,32 +1,35 @@
-// The plain step-1 screen: both sides on one page, every legal move as a button.
+// The game screen: a card table you play by clicking.
+// Pick up a card, hero or item (it glows when you can), then click where it goes.
 
 import {
   actingPlayer,
   applyAction,
   attackDamage,
   canAttack,
-  cardKind,
-  colorBonus,
-  colorInvestment,
-  COLORS,
-  getBuff,
-  getCamp,
-  getHero,
+  cardName,
   getItem,
   HEROES,
-  heroStats,
-  itemCost,
   legalActions,
   newGame,
+  other,
   roundOf,
+  tormentPulseDamage,
 } from "../rules";
 import type { Action, GameEvent, GameState, PlayerId } from "../rules";
+import { animate } from "./animate";
+import { esc, handCardHtml, heroCardHtml, patronHtml, playerStripHtml } from "./board";
+import type { View } from "./board";
 import { describeAction, describeEvent, heroName, playerName } from "./describe";
 import { helpHtml } from "./help";
+import { NONE, toMoves } from "./interactions";
+import type { Key, Move } from "./interactions";
 
 interface Session {
   state: GameState;
   log: string[];
+  selected: Key | null;
+  /** Several moves share the clicked source and target, e.g. play an item or upgrade into it. */
+  choice: Move[] | null;
 }
 
 const DEFAULT_LINEUPS: [string[], string[]] = [
@@ -35,34 +38,29 @@ const DEFAULT_LINEUPS: [string[], string[]] = [
 ];
 const DECK_FOR: [string, string] = ["gun-health", "spirit-health"];
 
-const soulsText = (n: number) => `${n} soul${n === 1 ? "" : "s"}`;
-
-const esc = (text: string) =>
-  text.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
-
 interface ActionGroup {
   title: string;
-  hint: string;
   types: Action["type"][];
-  collapsed?: boolean;
 }
 
 const ACTION_GROUPS: ActionGroup[] = [
-  { title: "Block", hint: "Block with a Ready hero: it and the attacker deal their full Gun damage to each other. Or let your Patron take the hit.", types: ["block"] },
-  { title: "Torment Pulse", hint: "Pick an enemy hero to hit.", types: ["tormentPulse"] },
-  { title: "Deploy a hero", hint: "Put a hero from your hero line into play. It can't attack this turn.", types: ["deploy"] },
-  { title: "Play an item", hint: "Give a hero an item. Each hero holds up to 3.", types: ["playItem"] },
-  { title: "Upgrade an item", hint: "Pay only the difference. The old item is discarded and the new one takes its slot.", types: ["upgradeItem"] },
-  { title: "Play a buff", hint: "A permanent bonus for one hero. Doesn't use an item slot.", types: ["playBuff"] },
-  { title: "Clear a camp", hint: "Pay the cost, your hero takes the damage, and you gain the souls.", types: ["playCamp"] },
-  { title: "Move an item", hint: "Costs half the item's cost, rounded up.", types: ["moveItem"], collapsed: true },
-  { title: "Item powers", hint: "Once per turn per item.", types: ["useCursedRelic"] },
-  { title: "Attack", hint: "Each Ready hero may attack once. Attacking a hero: it hits back for half its Gun. Attacking the Patron: the enemy may block.", types: ["attack"] },
-  { title: "Next", hint: "", types: ["startCombat", "endTurn"] },
+  { title: "Block", types: ["block"] },
+  { title: "Torment Pulse", types: ["tormentPulse"] },
+  { title: "Deploy a hero", types: ["deploy"] },
+  { title: "Play an item", types: ["playItem"] },
+  { title: "Upgrade an item", types: ["upgradeItem"] },
+  { title: "Play a buff", types: ["playBuff"] },
+  { title: "Clear a camp", types: ["playCamp"] },
+  { title: "Move an item", types: ["moveItem"] },
+  { title: "Item powers", types: ["useCursedRelic"] },
+  { title: "Attack", types: ["attack"] },
+  { title: "Next", types: ["startCombat", "endTurn"] },
 ];
 
 export function startApp(root: HTMLElement): void {
   let session: Session | null = null;
+  let moves: Move[] = [];
+  let view: View = { sources: new Set(), targets: new Set(), selected: null, deploys: new Map() };
 
   const help = document.createElement("dialog");
   help.id = "help";
@@ -79,22 +77,63 @@ export function startApp(root: HTMLElement): void {
 
   function begin(lineups: [string[], string[]], seed: number) {
     const { state, events } = newGame({ lineups, decks: DECK_FOR, seed });
-    session = { state, log: [`New game, seed ${seed}.`] };
+    session = { state, log: [`New game, seed ${seed}.`], selected: null, choice: null };
     record(state, events);
+    render(events);
+  }
+
+  function act(move: Move) {
+    const { state, events } = applyAction(session!.state, move.action);
+    session = { ...session!, state, selected: null, choice: null };
+    record(state, events);
+    render(events);
+  }
+
+  function clickKey(key: Key) {
+    const s = session!;
+    s.choice = null;
+    const prompt = s.state.pending !== null;
+    if (view.targets.has(key)) {
+      const options = moves.filter((m) => m.target === key && (prompt ? m.source === null : m.source === s.selected));
+      if (options.length === 1) return act(options[0]);
+      s.choice = options;
+      return render();
+    }
+    s.selected = view.sources.has(key) && s.selected !== key ? key : null;
     render();
   }
 
-  function act(action: Action) {
-    const { state, events } = applyAction(session!.state, action);
-    session!.state = state;
-    record(state, events);
-    render();
-  }
+  root.addEventListener("click", (ev) => {
+    const el = ev.target as HTMLElement;
+    if (el.closest("[data-help]")) return help.showModal();
+    if (!session) return;
+    if (el.closest("#new-game")) {
+      session = null;
+      return render();
+    }
+    const moveButton = el.closest<HTMLElement>("[data-move]");
+    if (moveButton) return act(moves[Number(moveButton.dataset.move)]);
+    if (el.closest("details, .choice")) return;
+    const keyed = el.closest<HTMLElement>("[data-key]");
+    if (keyed) return clickKey(keyed.dataset.key!);
+    if (session.selected || session.choice) {
+      session.selected = null;
+      session.choice = null;
+      render();
+    }
+  });
 
-  function render() {
-    root.innerHTML = session ? gameHtml(session) : setupHtml();
-    root.querySelectorAll("[data-help]").forEach((button) => button.addEventListener("click", () => help.showModal()));
+  document.addEventListener("keydown", (ev) => {
+    if (ev.key === "Escape" && session && (session.selected || session.choice)) {
+      session.selected = null;
+      session.choice = null;
+      render();
+    }
+  });
+
+  function render(events: GameEvent[] = []) {
     if (!session) {
+      root.innerHTML = setupHtml();
       root.querySelector("form")!.addEventListener("submit", (ev) => {
         ev.preventDefault();
         const form = new FormData(ev.target as HTMLFormElement);
@@ -108,17 +147,30 @@ export function startApp(root: HTMLElement): void {
       });
       return;
     }
-    const actions = legalActions(session.state);
-    root.querySelectorAll<HTMLButtonElement>("button[data-action]").forEach((button) => {
-      button.addEventListener("click", () => act(actions[Number(button.dataset.action)]));
-    });
-    root.querySelector("#new-game")!.addEventListener("click", () => {
-      session = null;
-      render();
-    });
+    const { state } = session;
+    moves = toMoves(state, legalActions(state));
+    view = buildView(session, moves);
+    root.innerHTML = gameHtml(session, moves, view);
+    const log = root.querySelector(".log");
+    if (log) log.scrollTop = 0;
+    animate(root.querySelector<HTMLElement>(".table")!, events);
   }
 
   render();
+}
+
+function buildView(session: Session, moves: Move[]): View {
+  const view: View = { sources: new Set(), targets: new Set(), selected: session.selected, deploys: new Map() };
+  if (session.state.pending) {
+    for (const m of moves) if (m.target !== NONE) view.targets.add(m.target);
+    return view;
+  }
+  for (const m of moves) {
+    if (m.action.type === "deploy") view.deploys.set(m.source!, m);
+    else if (m.source) view.sources.add(m.source);
+    if (m.source && m.source === session.selected && m.target !== NONE) view.targets.add(m.target);
+  }
+  return view;
 }
 
 function setupHtml(): string {
@@ -134,131 +186,154 @@ function setupHtml(): string {
       ${[0, 1]
         .map(
           (p) => `
-        <fieldset>
+        <fieldset class="team-${p}">
           <legend>${playerName(p as PlayerId)} (${p === 0 ? "Gun / Health" : "Spirit / Health"} deck)</legend>
           ${[0, 1, 2].map((i) => select(p, i)).join("")}
         </fieldset>`,
         )
         .join("")}
       <label>Seed (leave empty for a random game) <input name="seed" inputmode="numeric" /></label>
-      <button type="submit">Start game</button>
+      <button type="submit" class="primary">Start game</button>
     </form>`;
 }
 
-function cardHtml(cardId: string, playable: boolean): string {
-  const tag = playable ? `<div class="tag">Can play now</div>` : "";
-  const cls = playable ? "playable" : "";
-  switch (cardKind(cardId)) {
-    case "item": {
-      const item = getItem(cardId);
-      const from = item.buildsFrom ? ` Builds from ${esc(getItem(item.buildsFrom).name)}.` : "";
-      return `<div class="card ${item.color} ${cls}"><b>${esc(item.name)}</b> <span class="cost">${soulsText(itemCost(cardId))}</span>
-        <div class="kind">Item · tier ${item.tier}</div>
-        <div class="small">${esc(item.text)}${from}</div>${tag}</div>`;
-    }
-    case "buff": {
-      const buff = getBuff(cardId);
-      return `<div class="card buff ${cls}"><b>${esc(buff.name)}</b> <span class="cost">${soulsText(buff.cost)}</span>
-        <div class="kind">Buff</div>
-        <div class="small">${esc(buff.text)}</div>${tag}</div>`;
-    }
-    case "camp": {
-      const camp = getCamp(cardId);
-      return `<div class="card camp ${cls}"><b>${esc(camp.name)}</b> <span class="cost">${soulsText(camp.cost)}</span>
-        <div class="kind">Camp</div>
-        <div class="small">Send a hero: it takes ${camp.damage} damage and you gain ${camp.reward} souls. Playable from round ${camp.fromRound}.</div>${tag}</div>`;
-    }
-  }
-}
-
-function playerHtml(state: GameState, player: PlayerId, playableCards: Set<number>): string {
-  const p = state.players[player];
-  const invested = colorInvestment(p);
-  const colorLine = COLORS.map((c) => `<span class="${c}">${c}: ${invested[c]} invested, +${colorBonus(invested[c])}</span>`).join(" · ");
-  const heroes = p.heroes
-    .map((h, i) => {
-      const card = getHero(h.heroId);
-      const stats = heroStats(state, { player, hero: i });
-      let status: string = h.status;
-      if (h.status === "line") status = `in hero line, costs ${card.cost}`;
-      if (h.status === "down") status = `Down, ${h.downTimer} turn${h.downTimer === 1 ? "" : "s"} left`;
-      if (h.status === "ready" && h.deployedOnTurn === state.turn) status = "ready (deployed this turn, can't attack)";
-      const items = h.items
-        .map((it) => `<li class="${getItem(it.cardId).color}" title="${esc(getItem(it.cardId).text)}">${esc(getItem(it.cardId).name)}</li>`)
-        .join("");
-      return `<div class="hero ${h.status}">
-        <b>${esc(card.name)}</b> <span class="small">${status}</span>
-        <div>Health ${stats.health - h.damage}/${stats.health} · Gun ${stats.gun} · Spirit ${stats.spirit}</div>
-        <div class="small">Deaths: ${h.deaths}</div>
-        <ul class="items">${items || '<li class="muted">no items</li>'}</ul>
-      </div>`;
-    })
-    .join("");
-  const showHand = state.phase === "over" || player === actingPlayer(state);
-  const hand = showHand
-    ? `<details open><summary>Hand (${p.hand.length})</summary><div class="hand">${p.hand
-        .map((c) => cardHtml(c.cardId, playableCards.has(c.uid)))
-        .join("")}</div></details>`
-    : `<div class="small">Hand: ${p.hand.length} cards (hidden)</div>`;
-  return `<section class="player ${state.active === player ? "active" : ""}">
-    <h2>${playerName(player)} · Patron ${p.patronHealth} · Souls ${p.souls} <span class="small">(${p.soulsEarned} earned all game)</span></h2>
-    <div class="small">${colorLine} · Deck ${p.deck.length} · Discard ${p.discard.length}</div>
-    <div class="heroes">${heroes}</div>
-    ${hand}
-  </section>`;
-}
-
-function hintFor(state: GameState): string {
+/** What to do right now, in one or two plain sentences. */
+function hintFor(session: Session, moves: Move[]): string {
+  const { state, selected } = session;
+  const me = state.active;
   const pending = state.pending;
   if (state.phase === "over") return `${playerName(state.winner!)} wins! Press New game to play again.`;
   if (pending?.kind === "block") {
-    const attacker = { player: state.active, hero: pending.attacker };
-    return `${playerName(state.active)}'s ${heroName(state, attacker)} is attacking your Patron for ${attackDamage(state, attacker, "patron")} damage. Block it, or let your Patron take the hit.`;
+    const attacker = { player: me, hero: pending.attacker };
+    return `${playerName(other(me))}: ${heroName(state, attacker)} is attacking your Patron for ${attackDamage(state, attacker, "patron")} damage. Click one of your glowing heroes to block it, or take the hit.`;
   }
-  if (pending?.kind === "tormentPulse") return "Your Torment Pulse goes off: pick an enemy hero to hit.";
-  if (state.phase === "main") return "Main phase: deploy heroes and play cards from your hand. When you're done, Go to combat to attack, or End turn.";
-  const anyAttack = state.players[state.active].heroes.some((_, i) => canAttack(state, i));
-  return anyAttack
-    ? "Combat: each Ready hero may attack once. Heroes deployed this turn can't attack yet."
-    : "Combat: none of your heroes can attack right now. End your turn when you're ready.";
+  if (pending?.kind === "tormentPulse") {
+    const source = { player: me, hero: pending.heroes[0] };
+    return `Torment Pulse: click an enemy hero to deal ${tormentPulseDamage(state, source)} damage to it.`;
+  }
+  if (session.choice) return "Two ways to do that. Pick one.";
+  if (selected) {
+    const [kind, ...rest] = selected.split(":");
+    if (kind === "card") {
+      const card = state.players[me].hand.find((c) => c.uid === Number(rest[0]))!;
+      return `Click a glowing hero to play ${cardName(card.cardId)} on it. Click the card again to put it back.`;
+    }
+    if (kind === "hero") {
+      const hero = { player: me, hero: Number(rest[1]) };
+      return `Click what ${heroName(state, hero)} should attack: a glowing enemy hero (it hits back for half its Gun) or the enemy Patron (they may block).`;
+    }
+    if (kind === "item") {
+      const item = getItem(state.players[me].heroes[Number(rest[1])].items[Number(rest[2])].cardId);
+      return `Click a glowing hero for ${item.name}.`;
+    }
+  }
+  if (state.phase === "main") {
+    return "Main phase: click a glowing card in your hand, then the hero to play it on. Deploy heroes with their Deploy button. When you're done, Go to combat.";
+  }
+  const anyAttack = state.players[me].heroes.some((_, i) => canAttack(state, i));
+  if (anyAttack) return "Combat: click one of your Ready heroes, then what it should attack. Each hero attacks once.";
+  return moves.length ? "Combat: none of your heroes can attack now. End your turn when you're ready." : "";
 }
 
-function actionsHtml(state: GameState, actions: Action[]): string {
-  return ACTION_GROUPS.map((group) => {
-    const buttons = actions
-      .map((a, i) => ({ a, i }))
-      .filter(({ a }) => group.types.includes(a.type))
-      .map(({ a, i }) => `<button data-action="${i}" class="${a.type}">${esc(describeAction(state, a))}</button>`)
+function phaseTrackerHtml(state: GameState): string {
+  const steps = ["Start", "Main phase", "Combat", "End"];
+  const current = state.phase === "main" ? 1 : state.phase === "combat" ? 2 : -1;
+  return `<ol class="phases">${steps.map((s, i) => `<li class="${i === current ? "now" : i < current ? "done" : ""}">${s}</li>`).join("")}</ol>`;
+}
+
+function promptButtonsHtml(session: Session, moves: Move[]): string {
+  const { state } = session;
+  if (session.choice) {
+    return `<div class="choice">${session.choice
+      .map((m) => `<button data-move="${m.index}">${esc(describeAction(state, m.action))}</button>`)
+      .join("")}</div>`;
+  }
+  if (!state.pending) return "";
+  return moves
+    .filter((m) => m.target === NONE)
+    .map((m) => `<button class="take-hit" data-move="${m.index}">${esc(describeAction(state, m.action))}</button>`)
+    .join("");
+}
+
+function nextStepHtml(state: GameState, moves: Move[]): string {
+  if (state.pending) return "";
+  return moves
+    .filter((m) => m.action.type === "startCombat" || m.action.type === "endTurn")
+    .map((m) => {
+      const label = m.action.type === "startCombat" ? "Go to combat ▸" : "End turn ▸";
+      return `<button class="next ${m.action.type}" data-move="${m.index}">${label}</button>`;
+    })
+    .join("");
+}
+
+function allMovesHtml(state: GameState, moves: Move[]): string {
+  const groups = ACTION_GROUPS.map((group) => {
+    const buttons = moves
+      .filter((m) => group.types.includes(m.action.type))
+      .map((m) => `<button data-move="${m.index}">${esc(describeAction(state, m.action))}</button>`)
       .join("");
-    if (!buttons) return "";
-    const hint = group.hint ? `<div class="small">${esc(group.hint)}</div>` : "";
-    return `<details class="group" ${group.collapsed ? "" : "open"}><summary>${group.title}</summary>${hint}<div class="actions">${buttons}</div></details>`;
+    return buttons ? `<div class="group"><div class="group-title">${group.title}</div>${buttons}</div>` : "";
   }).join("");
+  return `<details class="all-moves"><summary>All moves as a list (${moves.length})</summary>${groups}</details>`;
 }
 
-function gameHtml({ state, log }: Session): string {
-  const actions = legalActions(state);
+function sideHtml(state: GameState, view: View, player: PlayerId, label: string): string {
+  const heroes = state.players[player].heroes.map((_, i) => heroCardHtml(state, view, player, i)).join("");
+  return `<section class="side team-${player} ${state.active === player ? "active" : ""}">
+    <div class="side-info">
+      <div class="side-label">${label}</div>
+      ${patronHtml(state, view, player)}
+      ${playerStripHtml(state, player)}
+    </div>
+    <div class="hero-row">${heroes}</div>
+  </section>`;
+}
+
+function gameHtml(session: Session, moves: Move[], view: View): string {
+  const { state, log } = session;
+  const me = state.active;
+  const enemy = other(me);
   const who = actingPlayer(state);
-  const playable = new Set(actions.flatMap((a) => ("card" in a ? [a.card] : [])));
-  let prompt = `${playerName(state.active)}'s turn · ${state.phase === "main" ? "Main phase" : "Combat"}`;
-  if (state.pending?.kind === "block") prompt = `${playerName(who)}: block the attack?`;
-  if (state.phase === "over") prompt = "Game over";
-  const top = (who === 0 ? 1 : 0) as PlayerId;
+  const hand = state.players[me].hand
+    .map((c) => handCardHtml(view, c.uid, c.cardId))
+    .join("");
+  const statLine = (p: PlayerId) =>
+    state.players[p].heroes.filter((h) => h.status !== "line").length
+      ? ""
+      : `<div class="empty-note">No heroes deployed yet.</div>`;
   return `
     <header>
-      <b>Round ${roundOf(state.turn)} · Turn ${state.turn}</b>
-      <span class="prompt">${esc(prompt)}</span>
+      <div class="title">Round ${roundOf(state.turn)} · Turn ${state.turn}</div>
+      <div class="whose team-${who}">${state.phase === "over" ? "Game over" : `${playerName(who)} to act`}</div>
+      ${state.phase === "over" ? "" : phaseTrackerHtml(state)}
+      <div class="spacer"></div>
       <button data-help>How to play</button>
       <button id="new-game">New game</button>
     </header>
-    <div class="hint">${esc(hintFor(state))}</div>
-    <main class="layout">
-      <div class="board">${playerHtml(state, top, playable)}${playerHtml(state, who, playable)}</div>
+    <div class="screen">
+      <div class="table">
+        ${sideHtml(state, view, enemy, `Opponent · ${playerName(enemy)}`)}
+        ${statLine(enemy)}
+        <div class="midline">
+          <div class="hint team-${who}">${esc(hintFor(session, moves))}</div>
+          <div class="prompt-buttons">${promptButtonsHtml(session, moves)}</div>
+        </div>
+        ${sideHtml(state, view, me, `You · ${playerName(me)}`)}
+        ${statLine(me)}
+        <div class="hand-row ${state.pending ? "waiting" : ""}">
+          <div class="hand">${hand || '<div class="empty-note">No cards in hand.</div>'}</div>
+          <div class="next-steps">${nextStepHtml(state, moves)}</div>
+        </div>
+      </div>
       <aside>
-        <h3>${state.phase === "over" ? "Game over" : `${playerName(who)}: your moves`}</h3>
-        ${actionsHtml(state, actions)}
-        <h3>Log</h3>
+        <h3>What happened</h3>
         <ul class="log">${[...log].reverse().map((l) => `<li>${esc(l)}</li>`).join("")}</ul>
+        ${state.phase === "over" ? "" : allMovesHtml(state, moves)}
+        <div class="legend">
+          <div><span class="dot pickable"></span> glowing gold: you can pick this up</div>
+          <div><span class="dot target"></span> pulsing: a place you can send it</div>
+          <div class="small">Hover an item for its card text.</div>
+        </div>
       </aside>
-    </main>`;
+    </div>`;
 }

@@ -6,4 +6,4 @@ export { newGame, roundOf } from "./turn";
 export type { GameConfig } from "./turn";
 export { legalActions, applyAction, actingPlayer, actionCost, canAttack } from "./actions";
 export { heroStats, colorInvestment, colorBonus, inPlay } from "./stats";
-export { attackDamage, hitBackDamage, blockDamage, tormentPulseDamage } from "./combat";
+export { other, attackDamage, hitBackDamage, blockDamage, tormentPulseDamage } from "./combat";
