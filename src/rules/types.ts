@@ -78,6 +78,7 @@ export interface RulesConfig {
   deck: { size: number; maxCopies: number };
   openingHand: number;
   drawPerTurn: number;
+  firstPlayerSkipsFirstDraw: boolean;
   souls: { base: number; perTurn: number; cap: number; secondPlayerBonus: number };
   heroItemSlots: number;
   itemTierCosts: number[];

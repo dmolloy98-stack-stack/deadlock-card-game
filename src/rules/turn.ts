@@ -131,7 +131,8 @@ export function startTurn(state: GameState, events: GameEvent[]): void {
     events.push({ type: "soulsGained", player, amount: secondPlayerBonus, reason: "going second" });
   }
 
-  draw(state, events, player, RULES.drawPerTurn);
+  const skipDraw = RULES.firstPlayerSkipsFirstDraw && player === state.firstPlayer && p.turnsTaken === 1;
+  if (!skipDraw) draw(state, events, player, RULES.drawPerTurn);
 }
 
 export function endTurn(state: GameState, events: GameEvent[]): void {

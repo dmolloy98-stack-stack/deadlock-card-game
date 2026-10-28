@@ -1,8 +1,9 @@
 {
   "patronHealth": 100,
   "deck": { "size": 20, "maxCopies": 2 },
-  "openingHand": 5,
+  "openingHand": 3,
   "drawPerTurn": 1,
+  "firstPlayerSkipsFirstDraw": true,
   "souls": { "base": 2, "perTurn": 1, "cap": 8, "secondPlayerBonus": 2 },
   "heroItemSlots": 3,
   "itemTierCosts": [1, 2, 4, 8],
